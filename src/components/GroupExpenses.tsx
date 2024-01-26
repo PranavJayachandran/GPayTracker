@@ -1,7 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { groupMoneyCalculator } from "../helpers/GroupExpensesHelper";
+import {
+  groupMoneyCalculator,
+  upDatePieChart,
+} from "../helpers/GroupExpensesHelper";
 import { IMoneyDictionary } from "../interfaces/IMoneyDicionary";
+import { Graph } from "./Graph";
 
 interface Props {
   name: string;
@@ -11,6 +15,12 @@ export const GroupExpenses = ({ name }: Props) => {
   const [moneySpent, setMoneySpent] = useState(0);
   const [moneyRecieved, setMoneyRecieved] = useState(0);
   const [moneyByGroup, setMoneyByGroup] = useState<IMoneyDictionary>();
+  const [pieChartDataSpent, setPieChartDataSpent] = useState<
+    Array<Array<string | number>>
+  >([["GroupName", "MoneySpent"]]);
+  const [pieChartDataRecieved, setPieChartDataRecieved] = useState<
+    Array<Array<string | number>>
+  >([["GroupName", "MoneyRecieved"]]);
   const fileRef = useRef<File | null>(null);
 
   const readAndParseJson = (file: File) => {
@@ -28,6 +38,12 @@ export const GroupExpenses = ({ name }: Props) => {
           setMoneySpent(calculatedMoney.totalSpent);
           setMoneyRecieved(calculatedMoney.totalReceived);
           setMoneyByGroup(calculatedMoney.moneyByGroup);
+          let pieChartData: Array<Array<string | number>> = upDatePieChart(
+            calculatedMoney.moneyByGroup.spent
+          );
+          setPieChartDataSpent(pieChartData);
+          pieChartData = upDatePieChart(calculatedMoney.moneyByGroup.recieved);
+          setPieChartDataRecieved(pieChartData);
         } catch (error) {
           console.error("Error parsing JSON:", error);
         }
@@ -52,10 +68,21 @@ export const GroupExpenses = ({ name }: Props) => {
       readAndParseJson(fileRef.current);
     }
   }, [fileRef.current]);
-
   useEffect(() => {
-    console.log(moneyByGroup?.spent)
-  },[moneyByGroup])
+    console.log(moneyByGroup?.spent);
+  }, [moneyByGroup]);
+  const data = [
+    ["Task", "Hours per Day"],
+    ["Work", 11],
+    ["Eat", 2],
+    ["Commute", 2],
+    ["Watch TV", 2],
+    ["Sleep", 7],
+  ];
+
+  const options = {
+    title: "My Daily Activities",
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
@@ -66,19 +93,29 @@ export const GroupExpenses = ({ name }: Props) => {
         {isDragActive ? (
           <p>Drop the files here ...</p>
         ) : (
-          <p>Drag 'n' drop some files here, or click to select files</p>
+          <p className="bg-blue-100 border-dotted px-4 py-10 text-center border-[2px] border-black">
+            Drop the file in the exported zip file from{" "}
+            <strong>Takeout\Google Pay\Group expenses</strong>
+          </p>
         )}
       </div>
       <div>
-        Spent: {moneySpent}
-        Recieved: {moneyRecieved}
-        {moneyByGroup?.spent && Object.keys(moneyByGroup?.spent).map((key) => (
-        <div key={key}>{`${key}: ${moneyByGroup?.spent[key]}`}</div>
-        ))}
-        <br/>
-      {moneyByGroup?.recieved && Object.keys(moneyByGroup?.recieved).map((key) => (
-        <div key={key}>{`${key}: ${moneyByGroup?.recieved[key]}`}</div>
-      ))}
+        Total Money Spent in groups: {moneySpent}
+        Total Money Recieved from groups: {moneyRecieved}
+      </div>
+      <div className="flex">
+        <Graph
+          data={pieChartDataSpent}
+          options={{
+            title: "Money spent in groups",
+          }}
+        />
+        <Graph
+          data={pieChartDataRecieved}
+          options={{
+            title: "Money recieved from groups",
+          }}
+        />
       </div>
     </div>
   );

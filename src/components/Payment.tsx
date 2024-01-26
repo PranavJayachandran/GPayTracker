@@ -11,16 +11,24 @@ export const Payment = () => {
         <label>Enter your name</label>
         <input
           value={name}
+          autoComplete="true"
           onChange={(e) => {
             setName(e.target.value);
           }}
+          className="border-2 border-black rounded-xl px-2 "
         />
-        <button onClick={() => { setPropName(name) }}>Submit</button>
-          </div>
+        <button
+          onClick={() => {
+            setPropName(name);
+          }}
+        >
+          Submit
+        </button>
+      </div>
       <div>
-        <GroupExpenses name={propName.toLowerCase()} />
-              {/* <IndividualPayments/> */}
-          </div>
+        {/* <GroupExpenses name={propName.toLowerCase()} /> */}
+        <IndividualPayments />
+      </div>
     </div>
   );
 };

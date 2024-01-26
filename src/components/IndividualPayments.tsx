@@ -1,54 +1,90 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
-
-const readAndParseHTML = (file: File) => {
-  const reader = new FileReader();
-
-  reader.onload = () => {
-      const fileContent = reader.result;
-    if (typeof fileContent == "string") {
-      const parser = new DOMParser();
-      const htmlDocument = parser.parseFromString(fileContent, "text/html");
-      const contentCells = htmlDocument.querySelectorAll(".content-cell");
-        const contentCellsArray = Array.from(contentCells);
-        let sentMoney: number = 0;
-        let recievedMoeny: number = 0;
-        contentCellsArray.forEach((element, index) => {
-            let inputString=element.innerHTML
-            const transactionTypeMatch = inputString.match(/(Received|Sent) ₹([\d.]+)/);
-            const transactionType = transactionTypeMatch ? transactionTypeMatch[1] : null;
-            const amountString = transactionTypeMatch ? transactionTypeMatch[2].replace(/,/g, '') : null;
-            const amount = amountString ? parseFloat(amountString) : null;
-            if (transactionType == "Sent" && amount != null)
-                sentMoney += amount;
-            else if (transactionType == "Received" && amount != null)
-                recievedMoeny += amount;
-        });
-        console.log(sentMoney, recievedMoeny);
-    }
-  };
-
-  reader.readAsText(file);
-};
+import {
+  getDataByDate,
+  getTotalMoneySpentAndRecieved,
+} from "../helpers/IndividualPaymentHelper";
 
 const IndividualPayments = () => {
-    let file:File|null=null;
+  const [moneySpent, setMoneySpent] = useState("");
+  const [moneyRecieved, setMoneyRecieved] = useState("");
+  const [dataByDate, setDataByDate] = useState<{
+    dateSortedSpend: Array<{ date: Date; value: number }>;
+    dateSortedRecieve: Array<{ date: Date; value: number }>;
+  } | null>(null);
+  let file: File | null = null;
+  const readAndParseHTML = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const fileContent = reader.result;
+      if (typeof fileContent == "string") {
+        const parser = new DOMParser();
+        const htmlDocument = parser.parseFromString(fileContent, "text/html");
+        let TotalMoney = getTotalMoneySpentAndRecieved(htmlDocument);
+        setMoneySpent(TotalMoney.spentMoney);
+        setMoneyRecieved(TotalMoney.recievedMoney);
+        // let tempData: {
+        //   dateSortedSpend: Array<{ date: Date; value: number }>;
+        //   dateSortedRecieve: Array<{ date: Date; value: number }>;
+        // } | null = getDataByDate(htmlDocument);
+        // setDataByDate(tempData);
+        getDataByDate(htmlDocument);
+      }
+    };
+
+    reader.readAsText(file);
+  };
   const onDrop = (acceptedFiles: File[]) => {
     file = acceptedFiles[0];
     if (file) {
-      readAndParseHTML(file);
+      {
+        readAndParseHTML(file);
+      }
     }
-    };
+  };
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   return (
-    <div {...getRootProps()}>
-      <input {...getInputProps()} />
-      {isDragActive ? (
-        <p>Drop the files here ...</p>
-      ) : (
-        <p>Drag 'n' drop some files here, or click to select files</p>
-      )}
+    <div>
+      <div {...getRootProps()}>
+        <input {...getInputProps()} />
+        {isDragActive ? (
+          <p>Drop the files here ...</p>
+        ) : (
+          <p className="bg-blue-100 border-dotted px-4 py-10 text-center border-[2px] border-black">
+            Drop the file in the exported zip file from{" "}
+            <strong>Takeout\Google Pay\My Activity</strong>
+          </p>
+        )}
+      </div>
+      <div>
+        <div>Total Money Spent: {moneySpent}</div>
+        <div>Total Money Recieved: {moneyRecieved}</div>
+      </div>
+      <div>
+        {dataByDate ? (
+          <div>
+            <div>
+              {dataByDate.dateSortedSpend.map((item) => (
+                <div>
+                  <div>Date: {item.date.toDateString()}</div>
+                  <div>MoneySpent: {item.value}</div>
+                </div>
+              ))}
+            </div>
+            <div>
+              {/* {dataByDate.dateSortedRecieve.map((item) => (
+              <div>
+                <div>Date: {item.date.toDateString()}</div>
+                <div>MoneyRecieved: {item.value}</div>
+              </div>
+            ))} */}
+            </div>
+          </div>
+        ) : (
+          <></>
+        )}
+      </div>
     </div>
   );
 };
