@@ -4,13 +4,14 @@ import {
   getDataByDate,
   getTotalMoneySpentAndRecieved,
 } from "../helpers/IndividualPaymentHelper";
+import { IMoneyByDate } from "../interfaces/IMoneyByDate";
 
 const IndividualPayments = () => {
   const [moneySpent, setMoneySpent] = useState("");
   const [moneyRecieved, setMoneyRecieved] = useState("");
   const [dataByDate, setDataByDate] = useState<{
-    dateSortedSpend: Array<{ date: Date; value: number }>;
-    dateSortedRecieve: Array<{ date: Date; value: number }>;
+    dateSortedSpend: IMoneyByDate;
+    dateSortedRecieve: IMoneyByDate;
   } | null>(null);
   let file: File | null = null;
   const readAndParseHTML = (file: File) => {
@@ -64,22 +65,9 @@ const IndividualPayments = () => {
       <div>
         {dataByDate ? (
           <div>
-            <div>
-              {dataByDate.dateSortedSpend.map((item) => (
-                <div>
-                  <div>Date: {item.date.toDateString()}</div>
-                  <div>MoneySpent: {item.value}</div>
-                </div>
-              ))}
-            </div>
-            <div>
-              {/* {dataByDate.dateSortedRecieve.map((item) => (
-              <div>
-                <div>Date: {item.date.toDateString()}</div>
-                <div>MoneyRecieved: {item.value}</div>
-              </div>
-            ))} */}
-            </div>
+            {Object.keys(dataByDate.dateSortedRecieve).map((key) => (
+              <div>{key}</div>
+            ))}
           </div>
         ) : (
           <></>

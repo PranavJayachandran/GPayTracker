@@ -1,5 +1,5 @@
 import { IDataByDate } from "../interfaces/IDataByDate";
-import { IMoneyDictionary } from "../interfaces/IMoneyDicionary";
+
 
 const extractMoney = (inputString: string) => {
   const transactionTypeMatch = inputString.match(/(Received|Sent) ₹([\d.]+)/);
@@ -18,7 +18,7 @@ const extractDate = (inputString: string) => {
 };
 export const getTotalMoneySpentAndRecieved = (htmlDocument: Document) => {
   const contentCells = htmlDocument.querySelectorAll(".content-cell");
-  const contentCellsArray = Array.from(contentCells).slice(0, 1000);
+  const contentCellsArray = Array.from(contentCells).split(0,1000);
   let spentMoney: number = 0;
   let recievedMoney: number = 0;
   contentCellsArray.forEach((element, index) => {
@@ -391,7 +391,7 @@ export const getDataByDate = (htmlDocument: Document) => {
     },
   };
   const contentCells = htmlDocument.querySelectorAll(".content-cell");
-  const contentCellsArray = Array.from(contentCells).slice(0, 1000);
+  const contentCellsArray = Array.from(contentCells);
   contentCellsArray.forEach((htmlContent, index) => {
     let inputString = htmlContent.innerHTML;
     let extractedDate = extractDate(inputString);
@@ -416,6 +416,7 @@ export const getDataByDate = (htmlDocument: Document) => {
         let month = extractedDate.getMonth().toString();
         let date = extractedDate.getDate().toString();
         let week = Math.floor(extractedDate.getDate() / 7);
+        console.log(year,month,week,date,dataByDate)
         if (dataByDate.recieved[year][month][week][date]) {
           dataByDate.recieved[year][month][week][date] += amount;
         } else {
@@ -426,15 +427,15 @@ export const getDataByDate = (htmlDocument: Document) => {
   });
   console.log(dataByDate);
   return {
-    dateSortedSpend: sortByDate(dataByDate.recieved),
-    dateSortedRecieve: sortByDate(dataByDate.spent),
+    dateSortedSpend: dataByDate.recieved,
+    dateSortedRecieve: dataByDate.spent,
   };
 };
-const sortByDate = (data: any) => {
-  // const entries = Object.entries(data).map(([dateString, value]) => ({
-  //   date: new Date(dateString),
-  //   value: value,
-  // }));
-  // return entries;
-  return data;
-};
+// const sortByDate = (data: any) => {
+//   // const entries = Object.entries(data).map(([dateString, value]) => ({
+//   //   date: new Date(dateString),
+//   //   value: value,
+//   // }));
+//   // return entries;
+//   return data;
+// };
